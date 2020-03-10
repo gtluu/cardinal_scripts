@@ -1,0 +1,7 @@
+Package: cardinalscripts
+Title: Short Scripts for Cardinal MSI
+Version: 0.1
+Authors@R: person("Gordon", "Luu", email="gluu2@uic.edu", role=c("aut", "cre"))
+Description: A collection of short scripts to be used short scripts to help streamline imaging mass spectrometry analysis in the R package Cardinal.
+Depends: R (>= 3.6)
+Imports: Cardinal, stringr, fuzzyjoin, dplyr, ggplot2, reticulate
