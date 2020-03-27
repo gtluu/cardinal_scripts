@@ -4,10 +4,14 @@ A small collection of scripts written to streamline data processing/analysis in 
 
 ## Installation
 #### Install from Github
+```
 devtools::install_github("gtluu/cardinalscripts")
+```
 
 #### Load from Local Folder
+```
 devtools::load_all("/path/to/cardinalscripts")
+```
 
 ## Dependencies
 Cardinal 2.4.0 or higher installed from Bioconductor 3.10 or higher.
