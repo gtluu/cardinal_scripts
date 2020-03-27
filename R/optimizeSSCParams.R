@@ -1,3 +1,11 @@
+#' Get Summary DataFrame
+#' 
+#' Aggregate summary SSC information into single dataframe
+#' 
+#' @param sscList \code{list} of \code{SpatialShrunkenCentroids} object
+#' @return \code{dataframe} with \code{summary()} information from \code{SpatialShrunkenCentroids2} objects
+#' 
+#' @export
 getSSCDf <- function(sscList) {
   sscDf <- data.frame(r=double(), k=double(), s=double(), classes=double(), features_per_class=double())
   for (ssc in sscList) {
@@ -8,6 +16,15 @@ getSSCDf <- function(sscList) {
   return(sscDf)
 }
 
+#' Optimize Sparsity (s) Parameter
+#' 
+#' Get the optimal parameter for s based on \code{spatialShrunkenCentroids} models
+#' 
+#' @param ssc \code{dataframe} with \code{summary()} information from \code{SpatialShrunkenCentroids2} objects
+#' @param sparam \code{vector} of values used for sparsity parameter in \code{spatialShrunkenCentroids}
+#' @return \code{integer} optimal value of s
+#' 
+#' @export
 optimizeSParam <- function(ssc, sparam) {
   uniqueClasses <- c()
   for (s in sparam) {
@@ -16,6 +33,15 @@ optimizeSParam <- function(ssc, sparam) {
     uniqueFreq$weight <- (as.numeric(uniqueFreq$freq) / as.numeric(sum(uniqueFreq$freq)))
     uniqueClass <- as.numeric(length(uniqueFreq$classes) / max(uniqueFreq$weight))
     uniqueClasses <- c(uniqueClasses, uniqueClass)
+  }
+  # Remove plateau resulting from k == classes.
+  for (i in 2:length(sparam)) {
+    if (length(sparam) == length(uniqueClasses)) {
+      if (uniqueClasses[1] == uniqueClasses[2]) {
+        uniqueClasses <- uniqueClasses[2:length(uniqueClasses)]
+        sparam <- sparam[2:length(sparam)]
+      }
+    }
   }
   # Find the knee of the curve of uniqueClasses vs sparam.
   kneeParam <- 5
@@ -34,6 +60,18 @@ optimizeSParam <- function(ssc, sparam) {
   return(optimalS)
 }
 
+#' Optimize Sparsity (s) Parameter
+#' 
+#' Get the optimal parameter for s based on \code{spatialShrunkenCentroids} models
+#' 
+#' @param ssc \code{dataframe} with \code{summary()} information from \code{SpatialShrunkenCentroids2} objects
+#' @param optimalS \code{integer} optimal value of s from \code{optimizeSParam}
+#' @param sparam \code{vector} of values used for sparsity parameter in \code{spatialShrunkenCentroids}
+#' @param rparam \code{vector} of values used for radius parameter in \code{spatialShrunkenCentroids}
+#' @param kparam \code{vector} of values used for k parameter in \code{spatialShrunkenCentroids}
+#' @return \code{dataframe} with row(s) of optimized parameter sets
+#' 
+#' @export
 optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
   rk <- data.frame(r=double(), k=double(), slope=double(), knee=double())
   for (r in rparam) {
@@ -41,25 +79,39 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
       # Find the knee for each combination of r and k.
       kneeParam <- 5
       kneeDf <- ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]
-      if (nrow(kneeDf) > 0) {
-        while(TRUE) {
-          knee <- kneed$KneeLocator(x=kneeDf$s, y=kneeDf$classes, S=kneeParam, curve='convex', direction='decreasing')$knee
-          if (!is.null(knee)) {
-            break
-          }
-          kneeParam <- kneeParam - 0.1
-          if (kneeParam <= 0) {
-            break
+      kneeDfS <- kneeDf$s
+      kneeDfClasses <- kneeDf$classes
+      # Remove plateau resulting from k == classes.
+      for (i in 2:length(kneeDfS)) {
+        if (length(kneeDfS) == length(kneeDfClasses)) {
+          if (kneeDfClasses[1] == kneeDfClasses[2]) {
+            kneeDfClasses <- kneeDfClasses[2:length(kneeDfClasses)]
+            kneeDfS <- kneeDfS[2:length(kneeDfS)]
           }
         }
-        if (is.null(knee)) {
-          knee <- NA
-        }
-        # Find slope * 100 of exponential curve for each combination of r and k.
-        slope <- (lm(log(ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]$classes) ~
-                       ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]$s)$coefficients[[2]]) * 100
-        if (!is.na(slope)) {
-          rk <- rbind(rk, c(r, k, slope, knee))
+      }
+      # Only find knee if line is not horizontal.
+      if (length(kneeDfS) > 1 & length(kneeDfClasses) > 1) {
+        if (nrow(kneeDf) > 0) {
+          while(TRUE) {
+            knee <- kneed$KneeLocator(x=kneeDfS, y=kneeDfClasses, S=kneeParam, curve='convex', direction='decreasing')$knee
+            if (!is.null(knee)) {
+              break
+            }
+            kneeParam <- kneeParam - 0.1
+            if (kneeParam <= 0) {
+              break
+            }
+          }
+          if (is.null(knee)) {
+            knee <- NA
+          }
+          # Find slope * 100 of exponential curve for each combination of r and k.
+          slope <- (lm(log(ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]$classes) ~
+                         ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]$s)$coefficients[[2]]) * 100
+          if (!is.na(slope)) {
+            rk <- rbind(rk, c(r, k, slope, knee))
+          }
         }
       }
     }
@@ -114,7 +166,7 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
 #' Optimize parameters used for Spatial Shrunken Centroids segmentation using
 #' a heuristic algorithm.
 #' 
-#' @param sscList \code{list} of \code{SpatialShrunkenCentroids} object
+#' @param x \code{SpatialShrunkenCentroids2} or \code{list} of \code{SpatialShrunkenCentroids} object
 #' @param sparam \code{vector} of values used for sparsity parameter in \code{spatialShrunkenCentroids}
 #' @param rparam \code{vector} of values used for radius parameter in \code{spatialShrunkenCentroids}
 #' @param kparam \code{vector} of values used for k parameter in \code{spatialShrunkenCentroids}
@@ -130,9 +182,13 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
 #' sscParams <- optimizeSSCParams(ssc, r=rparam, k=kparam, s=sparam)
 #' 
 #' @export
-optimizeSSCParams <- function(sscList, sparam, rparam, kparam) {
+optimizeSSCParams <- function(x, sparam, rparam, kparam) {
   # Get vectors for s values and number of unique classes per s value.
-  ssc <- getSSCDf(sscList)
+  if (class(x) == "SpatialShrunkenCentroids2") {
+    ssc <- as.data.frame(Cardinal::summary(x))
+  } else if (class(x) == "list") {
+    ssc <- getSSCDf(x)
+  }
   
   # Optimize sparsity (s) parameter.
   colnames(ssc) <- c('r', 'k', 's', 'classes', 'features_per_class')
