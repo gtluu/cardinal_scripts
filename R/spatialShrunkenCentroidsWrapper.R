@@ -32,7 +32,7 @@
 #' 
 #' @export
 spatialShrunkenCentroidsWrapper <- function(dataset, r=1, k=3, s=0, method='gaussian',
-                                            distance='chebyshev', init=NULL, iter.max=10
+                                            distance='chebyshev', init=NULL, iter.max=10,
                                             BPPARAM=bpparam()) {
   sscList <- list()
   inc <- 1
