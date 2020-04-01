@@ -48,50 +48,13 @@ findDiscriminateFeatures <- function(dataset, r=1, k=3, method='gaussian', dist=
                                      annealing=TRUE, init='gmm', p0=0.05, iter.max=100,
                                      tol=1e-9, fixedCondition, classControl='Ymax',
                                      BPPARAM=bpparam()) {
-  # Split MSImagingExperiment into list of MSImagingExperiments.
-  # One feature per object.
-  processedList <- list()
-  for (i in 1:length(mz(dataset))) {
-    processedList[[i]] <- dataset[features(dataset)[i],]
-  }
   
-  # Run spatial-DGMM for each individual object
-  sdgmmList <- list()
-  for (i in 1:length(processedList)) {
-    # Test if there are any bad ROIs for each feature first.
-    for (j in 1:length(levels(run(processedList[[i]])))) {
-      run <- as.character(levels(run(processedList[[i]]))[j])
-      idata <- processedList[[i]][,which(run(processedList[[i]])==run)]
-      idata <- imageData(idata)[[1]][1,]
-      if (length(unique(idata)) != 1) {
-        badFeature <- FALSE
-      } else {
-        badFeature <- TRUE
-        break
-      }
-    }
-    print(paste('Feature:', as.character(i)))
-    if (badFeature) {
-      sdgmmList[[i]] <- try(if (all(NA)) {})
-    } else {
-      sdgmmList[[i]] <- try(spatialDGMM(processedList[[i]], r=1, k=4,
-                                        groups=run(processedList[[i]]), method=method, dist=dist,
-                                        annealing=annealing, init=init, p0=p0, iter.max=iter.max,
-                                        tol=tol, BPPARAM=BPPARAM))
-    }
-  }
+  sdgmmList <- spatialDGMMWrapper(dataset=dataset, r=r, k=k, method=method, dist=dist,
+                                  annealing=annealing, init=init, p0=p0, iter.max=iter.max,
+                                  tol=tol, BPPARAM=BPPARAM)
   
-  # Run segmentationTest for each successful spatial-DGMM run.
-  df <- data.frame(mz=double(), r=double(), k=double(), feature=double(),
-                   LR=double(), PValue=double(), AdjP=double())
-  for (i in 1:length(sdgmmList)) {
-    if (class(sdgmmList[[i]]) != 'try-error') {
-      segTest <- segmentationTest(sdgmmList[[i]], as.formula(paste('~', fixedCondition)),
-                                  classControl=classControl)
-      segTestDf <- as.data.frame(topFeatures(segTest))
-      segTestDf$feature <- c(i)
-      df <- rbind(df, segTestDf)
-    }
-  }
+  df <- segmentationTestWrapper(sdgmmList=sdgmmList, fixedCondition=fixedCondition,
+                                classControl=classControl, BPPARAM=BPPARAM)
+  
   return(df)
 }
