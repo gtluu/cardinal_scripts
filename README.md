@@ -71,7 +71,7 @@ resultsDf <- segmentationTestWrapper(sdgmmList, r=1, k=4, fixedCondition='treate
 
 ### findDiscriminantFeatures
 
-Use this function to apply ```spatialDGMMWrapper()``` and ```segmentationTestWrapper90``` to an ```MSImagingExperiment``` object. Useful if only testing one fixed condition in the dataset.
+Use this function to apply ```spatialDGMMWrapper()``` and ```segmentationTestWrapper()``` to an ```MSImagingExperiment``` object. Useful if only testing one fixed condition in the dataset.
 
 ```
 resultsDf <- findDiscriminantFeatures(data, r=1, k=4, fixedCondition='treated', classControl='Ymax')
