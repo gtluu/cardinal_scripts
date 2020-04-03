@@ -1,6 +1,6 @@
-#' Find Discriminate Features
+#' Find Discriminant Features
 #' 
-#' Find discriminate features using \code{spatialDGMM} to apply univariate segmentation followed
+#' Find discriminant features using \code{spatialDGMM} to apply univariate segmentation followed
 #' by \code{segmentationTest} to identify statistically significant values, returned in a
 #' \code{dataframe}. Note that AdjP/FDR values using this wrapper are not reliable and should be
 #' ignored.
@@ -44,7 +44,7 @@
 #'                                        classControl='Ymax')
 #' 
 #' @export
-findDiscriminateFeatures <- function(dataset, r=1, k=3, method='gaussian', dist='chebyshev',
+findDiscriminantFeatures <- function(dataset, r=1, k=3, method='gaussian', dist='chebyshev',
                                      annealing=TRUE, init='gmm', p0=0.05, iter.max=100,
                                      tol=1e-9, fixedCondition, classControl='Ymax',
                                      BPPARAM=bpparam()) {
