@@ -50,8 +50,8 @@ updateMetadata <- function(dataset, filedir=getwd(), spotFile, roiFile) {
     pixelData(dataset)[[names(rois)[cond]]] <- as.factor(pd[[names(rois)[cond]]])
   }
   
-  # Update run metadata to reflect run + roi.
-  run(dataset) <- as.factor(paste(run(dataset), pixelData(dataset)$roi, sep='_'))
+  # Add column to metadata to reflect run + roi.
+  pixelData(dataset)$run <- as.factor(paste(run(dataset), pixelData(dataset)$roi, sep='_'))
   
   # Return dataset with updated metadata.
   return(dataset)
