@@ -35,7 +35,7 @@
 #' @export
 spatialDGMMWrapper <- function(dataset, r=1, k=3, method='gaussian', dist='chebyshev',
                                annealing=TRUE, init='gmm', p0=0.05, iter.max=100,
-                               tol=1e-9, BPPARAM=bpparam()) {
+                               tol=1e-9, BPPARAM=BiocParallel::bpparam()) {
   # Split MSImagingExperiment into list of MSImagingExperiments.
   # One feature per object.
   processedList <- list()
@@ -44,12 +44,12 @@ spatialDGMMWrapper <- function(dataset, r=1, k=3, method='gaussian', dist='cheby
   }
   
   # Run spatial-DGMM for each individual object
-  sdgmmList <- list()
-  for (i in 1:length(processedList)) {
+  sdgmm <- function(processed) {
+    library(Cardinal)
     # Test if there are any bad ROIs for each feature first.
-    for (j in 1:length(levels(run(processedList[[i]])))) {
-      run <- as.character(levels(run(processedList[[i]]))[j])
-      idata <- processedList[[i]][,which(run(processedList[[i]])==run)]
+    for (j in 1:length(levels(pixelData(processed)$run))) {
+      run <- as.character(levels(pixelData(processed)$run)[j])
+      idata <- processed[,which(pixelData(processed)$run==run)]
       idata <- imageData(idata)[[1]][1,]
       if (length(unique(idata)) != 1) {
         badFeature <- FALSE
@@ -60,13 +60,24 @@ spatialDGMMWrapper <- function(dataset, r=1, k=3, method='gaussian', dist='cheby
     }
     print(paste('Feature:', as.character(i)))
     if (badFeature) {
-      sdgmmList[[i]] <- try(if (all(NA)) {})
+      return(try(if (all(NA)) {}))
     } else {
-      sdgmmList[[i]] <- try(spatialDGMM(processedList[[i]], r=r, k=k,
-                                        groups=run(processedList[[i]]), method=method, dist=dist,
-                                        annealing=annealing, init=init, p0=p0, iter.max=iter.max,
-                                        tol=tol, BPPARAM=BPPARAM))
+      return(try(spatialDGMM(processed, r=r, k=k, groups=pixelData(processed)$run,
+                                       method=method, dist=dist, annealing=annealing,
+                                       init=init, p0=p0, iter.max=iter.max, tol=tol,
+                                       BPPARAM=BPPARAM)))
     }
+  }
+  
+  if (class(bpparam()) == 'SerialParam') {
+    # Linear
+    sdgmmList <- list()
+    for (i in 1:length(processedList)) {
+      sdgmmList[[i]] <- sdgmm(processedList[[i]])
+    }
+  } else {
+    # Parallel
+    sdgmmList <- bplapply(processedList, FUN=sdgmm)
   }
   
   return(sdgmmList)

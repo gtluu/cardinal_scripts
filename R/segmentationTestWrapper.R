@@ -25,17 +25,20 @@
 #' @export
 segmentationTestWrapper <- function(sdgmmList, fixedCondition, classControl='Ymax',
                                     BPPARAM=bpparam()) {
-  # Run segmentationTest for each successful spatial-DGMM run.
+  # Initialize data.frame.
   df <- data.frame(mz=double(), r=double(), k=double(), feature=double(),
                    LR=double(), PValue=double(), AdjP=double())
+  
+  # Run segmentationTest for each successful spatial-DGMM run.
   for (i in 1:length(sdgmmList)) {
     if (class(sdgmmList[[i]]) != 'try-error') {
       segTest <- segmentationTest(sdgmmList[[i]], as.formula(paste('~', fixedCondition)),
-                                  classControl=classControl)
+                                  classControl=classControl, BPPARAM=BPPARAM)
       segTestDf <- as.data.frame(topFeatures(segTest))
       segTestDf$feature <- c(i)
       df <- rbind(df, segTestDf)
     }
   }
+  
   return(df)
 }
