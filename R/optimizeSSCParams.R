@@ -57,7 +57,13 @@ optimizeSParam <- function(ssc, sparam) {
       stop('No s parameter identified.')
     }
   }
-  return(optimalS)
+  figureS2a <- ggplot() +
+    xlab('sparsity (s)') +
+    ylab('weighted cardinality score') +
+    geom_point(aes(x=sparam, y=uniqueClasses)) +
+    geom_line(aes(x=sparam, y=uniqueClasses)) +
+    geom_vline(xintercept=optimalS)
+  return(list(optimalS, figureS2a))
 }
 
 #' Optimize Sparsity (s) Parameter
@@ -245,5 +251,5 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam) {
   #plot of s parameter optimization
   optimalSFig <- optimalSPlot(ssc, rparam, kparam, sparam)
   
-  return(list('r'=optimalR, 'k'=optimalK, 's'=optimalS, optimalSFig))
+  return(list('r'=optimalR, 'k'=optimalK, 's'=optimalS[1], optimalS[2], optimalSFig))
 }
