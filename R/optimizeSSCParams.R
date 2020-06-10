@@ -166,6 +166,7 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
   optimalParams <- optimalParams[which(optimalParams$score==max(optimalParams$score)),]
   return(optimalParams)
 }
+
 #'Plot of sparsity (s) parameter optimization
 #'
 #'Plot that shows predicted # of segments for different s values
@@ -238,9 +239,9 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam) {
   } else if (class(x) == "list") {
     ssc <- getSSCDf(x)
   }
+  colnames(ssc) <- c('r', 'k', 's', 'classes', 'features_per_class')
   
   # Optimize sparsity (s) parameter.
-  colnames(ssc) <- c('r', 'k', 's', 'classes', 'features_per_class')
   optimalS <- optimizeSParam(ssc, sparam)
   
   # Optimize r and k parameters.
