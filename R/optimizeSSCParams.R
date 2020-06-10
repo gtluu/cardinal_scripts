@@ -235,22 +235,22 @@ optimalSPlot <- function(sscObject, sparam, rparam, kparam){
 optimizeSSCParams <- function(x, sparam, rparam, kparam) {
   # Get vectors for s values and number of unique classes per s value.
   if (class(x) == "SpatialShrunkenCentroids2") {
-    ssc <- as.data.frame(Cardinal::summary(x))
+    sscDf <- as.data.frame(Cardinal::summary(x))
   } else if (class(x) == "list") {
-    ssc <- getSSCDf(x)
+    sscDf <- getSSCDf(x)
   }
-  colnames(ssc) <- c('r', 'k', 's', 'classes', 'features_per_class')
+  colnames(sscDf) <- c('r', 'k', 's', 'classes', 'features_per_class')
   
   # Optimize sparsity (s) parameter.
-  optimalS <- optimizeSParam(ssc, sparam)
+  optimalS <- optimizeSParam(sscDf, sparam)
   
   # Optimize r and k parameters.
-  optimalParams <- optimizeRKParams(ssc, optimalS, rparam, kparam)
+  optimalParams <- optimizeRKParams(sscDf, optimalS, rparam, kparam)
   optimalR <- optimalParams$r
   optimalK <- optimalParams$k
   
   #plot of s parameter optimization
-  optimalSFig <- optimalSPlot(ssc, rparam, kparam, sparam)
+  optimalSFig <- optimalSPlot(sscDf, rparam, kparam, sparam)
   
   return(list('r'=optimalR, 'k'=optimalK, 's'=optimalS[1], optimalS[2], optimalSFig))
 }
