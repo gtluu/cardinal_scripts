@@ -2,18 +2,17 @@
 #' 
 #' Returns a new object from which certain roi(s) have been removed
 #' 
-#' @param dataObject is loaded data from a .imzml file
-#' @param rm_roi is a vector of the rois that need to be removed
-#' @return dataObject containin the new sub settes object without the specefied rois
+#' @param dataObject \code{MSImagingExperiment} loaded \code{.imzML} file
+#' @param rois \code{vector} of the regions of interest (ROIs) to be removed
+#' @return \code{MSImagingExperiment} with the specefied ROIs removed
 #' @example 
 #' 
-#' subset <- dataSubset(omentum, c("DMEM","DMEMO"))
+#' subset <- dataSubset(dataset, c("roi1","roi2"))
 #' 
 #' @export
 
-
-dataSubset <- function(dataObject, rm_roi){
-  for(i in rm_roi){
+subsetData <- function(dataObject, rois){
+  for(i in rois){
     dataObject <- dataObject[, which(pixelData(dataObject)$roi != i)]
   }
   return(dataObject)
