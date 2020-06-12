@@ -187,11 +187,8 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
 #'SFig <- sscLinesPlot(ssc)
 #'
 #'@export
-sscLinesPlot <- function(sscObject){
-  #get summary data frame
-  sscDf<- as.data.frame(summary(sscObject))
-  colnames(sscDf) <- c('r', 'k', 's', 'classes', 'features_per_class')
-  
+sscLinesPlot <- function(sscDf){
+
   figure <- ggplot() +
     xlab('sparsity (s)') +
     ylab('predicted # of segments') +
