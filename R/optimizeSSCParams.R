@@ -172,9 +172,6 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
 #'Plot that shows predicted # of segments for different s values
 #'
 #'@param sscObject \code{SpatialShrunkenCentroids2} object output from \code{spatialShrunkenCentroids()}
-#'@param sparam \code{vector} of values used for sparsity parameter in \code{spatialShrunkenCentroids}
-#'@param rparam \code{vector} of values used for radius parameter in \code{spatialShrunkenCentroids}
-#'@param kparam \code{vector} of values used for k parameter in \code{spatialShrunkenCentroids}
 #'@return figure with plot of predicted # of segments for different s values
 #'
 #'@examples
@@ -184,13 +181,13 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
 #'sparam <- c(0,3,6,9,12)
 #'
 #'ssc <- spatialShrunkenCentroids(data, r=rparam, k=kparam, s=sparam)
-#'SFig <- OptimalSplot(ssc, sparam, rparam, kparam)
+#'SFig <- OptimalSplot(ssc)
 #'
 #'@export
-optimalSPlot <- function(sscObject, sparam, rparam, kparam){
+sscLinesPlot <- function(sscObject){
   #get summary data frame
-  ssdDf<- as.data.frame(summary(sscObject))
-  colnames(ssdDf) <- c('r', 'k', 's', 'classes', 'features_per_class')
+  sscDf<- as.data.frame(summary(sscObject))
+  colnames(sscDf) <- c('r', 'k', 's', 'classes', 'features_per_class')
   
   figure <- ggplot() +
     xlab('sparsity (s)') +
@@ -198,9 +195,9 @@ optimalSPlot <- function(sscObject, sparam, rparam, kparam){
     labs(colour='Line')
   #nested for loop that iterates through all combinations of r and k for each s value and adds a line to the plot
   i <- 1
-  for (r in rparam) {
-    for (k in kparam) {
-      df <- ssdDf[,c('s', 'classes')][which(ssdDf$r==r & ssdDf$k==k),]
+  for (r in sort(unique(sscDf$r))) {
+    for (k in sort(unique(sscDf$k))) {
+      df <- sscDf[,c('s', 'classes')][which(sscDf$r==r & sscDf$k==k),]
       figure <- figure +
         geom_point(aes_(x=df$s, y=df$classes, colour = paste('r=', as.character(r), 'k=', as.character(k))), shape=i) +
         geom_line(aes_(x=df$s, y=df$classes,colour = paste('r=', as.character(r), 'k=', as.character(k))))
