@@ -15,6 +15,15 @@ getSSCDf <- function(sscList) {
   }
   return(sscDf)
 }
+sparcityPlot <- function(sparam, uniqueClasses, optimalS){
+  figureS2a <- ggplot() +
+    xlab('sparsity (s)') +
+    ylab('weighted cardinality score') +
+    geom_point(aes(x=sparam, y=uniqueClasses)) +
+    geom_line(aes(x=sparam, y=uniqueClasses)) +
+    geom_vline(xintercept=optimalS)
+  return(figureS2a)
+}
 
 #' Optimize Sparsity (s) Parameter
 #' 
@@ -57,13 +66,8 @@ optimizeSParam <- function(ssc, sparam) {
       stop('No s parameter identified.')
     }
   }
-  figureS2a <- ggplot() +
-    xlab('sparsity (s)') +
-    ylab('weighted cardinality score') +
-    geom_point(aes(x=sparam, y=uniqueClasses)) +
-    geom_line(aes(x=sparam, y=uniqueClasses)) +
-    geom_vline(xintercept=optimalS)
-  return(list(optimalS, figureS2a))
+  figSparcityPlot <- sparcityPlot(sparam, uniqueClasses, optimalS)
+  return(list('optimalS'=optimalS, 'sparcityPlot'=figSparcityPlot))
 }
 
 #' Optimize Sparsity (s) Parameter
@@ -166,7 +170,6 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
   optimalParams <- optimalParams[which(optimalParams$score==max(optimalParams$score)),]
   return(optimalParams)
 }
-
 #'Plot of sparsity (s) parameter optimization
 #'
 #'Plot that shows predicted # of segments for different s values
@@ -181,7 +184,7 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
 #'sparam <- c(0,3,6,9,12)
 #'
 #'ssc <- spatialShrunkenCentroids(data, r=rparam, k=kparam, s=sparam)
-#'SFig <- OptimalSplot(ssc)
+#'SFig <- sscLinesPlot(ssc)
 #'
 #'@export
 sscLinesPlot <- function(sscObject){
@@ -217,7 +220,7 @@ sscLinesPlot <- function(sscObject){
 #' @param sparam \code{vector} of values used for sparsity parameter in \code{spatialShrunkenCentroids}
 #' @param rparam \code{vector} of values used for radius parameter in \code{spatialShrunkenCentroids}
 #' @param kparam \code{vector} of values used for k parameter in \code{spatialShrunkenCentroids}
-#' @return \code{list} with optimal \code{spatialShrunkenCentroids} parameters for r, k, and s and figure from \code{optimalSPlot}
+#' @return \code{list} with optimal \code{spatialShrunkenCentroids} parameters for r, k, and s and figure from \code{sscLinesPlot}
 #' @examples
 #' 
 #' rparam <- c(1,2,3)
@@ -239,7 +242,9 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam) {
   colnames(sscDf) <- c('r', 'k', 's', 'classes', 'features_per_class')
   
   # Optimize sparsity (s) parameter.
-  optimalS <- optimizeSParam(sscDf, sparam)
+  optimalSAndPlot <- optimizeSParam(sscDf, sparam)
+  optimalS <- optimalSAndPlot$optimalS
+  plotSparcity <- optimalSAndPlot$sparcityPlot
   
   # Optimize r and k parameters.
   optimalParams <- optimizeRKParams(sscDf, optimalS, rparam, kparam)
@@ -247,7 +252,7 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam) {
   optimalK <- optimalParams$k
   
   #plot of s parameter optimization
-  optimalSFig <- optimalSPlot(sscDf, rparam, kparam, sparam)
+  optimalSFig <- sscLinesPlot(sscDf)
   
-  return(list('r'=optimalR, 'k'=optimalK, 's'=optimalS[1], optimalS[2], optimalSFig))
+  return(list('r'=optimalR, 'k'=optimalK, 's'=optimalS, 'sparcityPlot'=plotSparcity, 'sscLinesPlot'=optimalSFig))
 }
