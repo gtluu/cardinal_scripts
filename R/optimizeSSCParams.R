@@ -187,25 +187,29 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
 #'SFig <- sscLinesPlot(ssc)
 #'
 #'@export
-sscLinesPlot <- function(sscDf){
-
-  figure <- ggplot() +
-    xlab('sparsity (s)') +
-    ylab('predicted # of segments') +
-    labs(colour='Line')
-  #nested for loop that iterates through all combinations of r and k for each s value and adds a line to the plot
-  i <- 1
-  for (r in sort(unique(sscDf$r))) {
-    for (k in sort(unique(sscDf$k))) {
-      df <- sscDf[,c('s', 'classes')][which(sscDf$r==r & sscDf$k==k),]
-      figure <- figure +
-        geom_point(aes_(x=df$s, y=df$classes, colour = paste('r=', as.character(r), 'k=', as.character(k))), shape=i) +
-        geom_line(aes_(x=df$s, y=df$classes,colour = paste('r=', as.character(r), 'k=', as.character(k))))
-      i <- i + 1
+sscLinesPlot <- function(sscDf, plot=TRUE){
+  if(plot){
+    figure <- ggplot() +
+      xlab('sparsity (s)') +
+      ylab('predicted # of segments') +
+      labs(colour='Line')
+    #nested for loop that iterates through all combinations of r and k for each s value and adds a line to the plot
+    i <- 1
+    for (r in sort(unique(sscDf$r))) {
+      for (k in sort(unique(sscDf$k))) {
+        df <- sscDf[,c('s', 'classes')][which(sscDf$r==r & sscDf$k==k),]
+        figure <- figure +
+          geom_point(aes_(x=df$s, y=df$classes, colour = paste('r=', as.character(r), 'k=', as.character(k))), shape=i) +
+          geom_line(aes_(x=df$s, y=df$classes,colour = paste('r=', as.character(r), 'k=', as.character(k))))
+        i <- i + 1
+      }
     }
+    
+    return(figure)
   }
-  
-  return(figure)
+  else {
+    return(NULL)
+  }
 }
 
 #' Optimize SpatialShrunkenCentroids Parameters
@@ -229,7 +233,7 @@ sscLinesPlot <- function(sscDf){
 #' sscParams <- optimizeSSCParams(ssc, r=rparam, k=kparam, s=sparam)
 #' 
 #' @export
-optimizeSSCParams <- function(x, sparam, rparam, kparam) {
+optimizeSSCParams <- function(x, sparam, rparam, kparam, linesPlot=TRUE) {
   # Get vectors for s values and number of unique classes per s value.
   if (class(x) == "SpatialShrunkenCentroids2") {
     sscDf <- as.data.frame(Cardinal::summary(x))
@@ -249,7 +253,9 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam) {
   optimalK <- optimalParams$k
   
   #plot of s parameter optimization
-  optimalSFig <- sscLinesPlot(sscDf)
+  optimalSFig <- sscLinesPlot(sscDf, linesPlot)
   
   return(list('r'=optimalR, 'k'=optimalK, 's'=optimalS, 'sparcityPlot'=plotSparcity, 'sscLinesPlot'=optimalSFig))
 }
+
+h <- optimizeSSCParams(ssc1, sparam, rparam, kparam, linesPlot = FALSE)
