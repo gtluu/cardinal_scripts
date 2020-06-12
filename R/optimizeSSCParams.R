@@ -16,13 +16,13 @@ getSSCDf <- function(sscList) {
   return(sscDf)
 }
 sparcityPlot <- function(sparam, uniqueClasses, optimalS){
-  figureS2a <- ggplot() +
-    xlab('sparsity (s)') +
-    ylab('weighted cardinality score') +
-    geom_point(aes(x=sparam, y=uniqueClasses)) +
-    geom_line(aes(x=sparam, y=uniqueClasses)) +
-    geom_vline(xintercept=optimalS)
-  return(figureS2a)
+    figureS2a <- ggplot() +
+      xlab('sparsity (s)') +
+      ylab('weighted cardinality score') +
+      geom_point(aes(x=sparam, y=uniqueClasses)) +
+      geom_line(aes(x=sparam, y=uniqueClasses)) +
+      geom_vline(xintercept=optimalS)
+    return(figureS2a)
 }
 
 #' Optimize Sparsity (s) Parameter
@@ -34,7 +34,7 @@ sparcityPlot <- function(sparam, uniqueClasses, optimalS){
 #' @return \code{integer} optimal value of s
 #' 
 #' @export
-optimizeSParam <- function(ssc, sparam) {
+optimizeSParam <- function(ssc, sparam, plot=TRUE) {
   uniqueClasses <- c()
   for (s in sparam) {
     uniqueFreq <- as.data.frame(table(sort(ssc[,c('s', 'classes')][which(ssc$s==s),]$classes)))
@@ -66,8 +66,13 @@ optimizeSParam <- function(ssc, sparam) {
       stop('No s parameter identified.')
     }
   }
-  figSparcityPlot <- sparcityPlot(sparam, uniqueClasses, optimalS)
-  return(list('optimalS'=optimalS, 'sparcityPlot'=figSparcityPlot))
+  if(plot){
+    figSparcityPlot <- sparcityPlot(sparam, uniqueClasses, optimalS)
+    return(list('optimalS'=optimalS, 'sparcityPlot'=figSparcityPlot))
+  }
+  else{
+    return(list('optimalS'=optimalS, 'sparcityPlot'=NULL))
+  }
 }
 
 #' Optimize Sparsity (s) Parameter
@@ -233,7 +238,7 @@ sscLinesPlot <- function(sscDf, plot=TRUE){
 #' sscParams <- optimizeSSCParams(ssc, r=rparam, k=kparam, s=sparam)
 #' 
 #' @export
-optimizeSSCParams <- function(x, sparam, rparam, kparam, linesPlot=TRUE) {
+optimizeSSCParams <- function(x, sparam, rparam, kparam, linesPlot=TRUE, sparcePlot=TRUE) {
   # Get vectors for s values and number of unique classes per s value.
   if (class(x) == "SpatialShrunkenCentroids2") {
     sscDf <- as.data.frame(Cardinal::summary(x))
@@ -243,7 +248,7 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam, linesPlot=TRUE) {
   colnames(sscDf) <- c('r', 'k', 's', 'classes', 'features_per_class')
   
   # Optimize sparsity (s) parameter.
-  optimalSAndPlot <- optimizeSParam(sscDf, sparam)
+  optimalSAndPlot <- optimizeSParam(sscDf, sparam, sparcePlot)
   optimalS <- optimalSAndPlot$optimalS
   plotSparcity <- optimalSAndPlot$sparcityPlot
   
@@ -257,5 +262,3 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam, linesPlot=TRUE) {
   
   return(list('r'=optimalR, 'k'=optimalK, 's'=optimalS, 'sparcityPlot'=plotSparcity, 'sscLinesPlot'=optimalSFig))
 }
-
-h <- optimizeSSCParams(ssc1, sparam, rparam, kparam, linesPlot = FALSE)
