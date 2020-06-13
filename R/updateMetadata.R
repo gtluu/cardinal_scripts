@@ -26,7 +26,7 @@ updateMetadata <- function(dataset, filedir=getwd(), spotFile, roiFile) {
   rois <- read.csv(paste0(filedir, '/', roiFile), fileEncoding='UTF-8-BOM')
   
   # Exit with error if first column is not 'roi'.
-  if (colnames(rois)[1] != 'roi') {
+  if (tolower(colnames(rois)[1]) != 'roi') {
     stop("Attribute table should begin with column 'roi'.")
   }
   
