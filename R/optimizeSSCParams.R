@@ -261,5 +261,5 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam, plotLines=TRUE, plotS=T
     sscLinesPlot <- NULL
   }
   
-  return(list('r'=optimalR, 'k'=optimalK, 's'=optimalS, 'sparsityPlot'=sparsityPlot, 'sscLinesPlot'=sscLinesPlot))
+  return(list('params'=list('r'=optimalR, 'k'=optimalK, 's'=optimalS), 'sparsityPlot'=sparsityPlot, 'sscLinesPlot'=sscLinesPlot))
 }
