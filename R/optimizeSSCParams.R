@@ -67,13 +67,12 @@ optimizeSParam <- function(ssc, sparam, plot=TRUE) {
       stop('No s parameter identified.')
     }
   }
-  if(plot){
+  if(plot) {
     sparsityPlot <- plotSparsity(sparam, uniqueClasses, optimalS)
-    return(list('optimalS'=optimalS, 'sparsityPlot'=sparsityPlot))
+  } else {
+    sparsityPlot <- NULL
   }
-  else{
-    return(list('optimalS'=optimalS, 'sparsityPlot'=NULL))
-  }
+  return(list('optimalS'=optimalS, 'sparsityPlot'=sparsityPlot))
 }
 
 #' Optimize Sparsity (s) Parameter
