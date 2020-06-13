@@ -172,8 +172,7 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
   # score = slope * curvature for each exponential curve.
   optimalParams$score <- numpy$abs(optimalParams$slope * optimalParams$curvature)
   # Choose the line where the combination of r and k has the best score.
-  optimalParams <- optimalParams[which(optimalParams$score==max(optimalParams$score)),]
-  return(optimalParams)
+  return(list('optimalParams'=optimalParams[which(optimalParams$score==max(optimalParams$score)),], 'rkScores'=optimalParams))
 }
 
 #'Plot of sparsity (s) parameter optimization
@@ -235,7 +234,7 @@ plotSSCLines <- function(sscDf, plot=TRUE){
 #' sscParams <- optimizeSSCParams(ssc, r=rparam, k=kparam, s=sparam)
 #' 
 #' @export
-optimizeSSCParams <- function(x, sparam, rparam, kparam, plotLines=TRUE, plotS=TRUE) {
+optimizeSSCParams <- function(x, sparam, rparam, kparam, plotLines=TRUE, plotS=TRUE, showRKScores=TRUE) {
   # Get vectors for s values and number of unique classes per s value.
   if (class(x) == "SpatialShrunkenCentroids2") {
     sscDf <- as.data.frame(Cardinal::summary(x))
@@ -250,9 +249,9 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam, plotLines=TRUE, plotS=T
   sparsityPlot <- tmp$sparsityPlot
   
   # Optimize r and k parameters.
-  optimalParams <- optimizeRKParams(sscDf, optimalS, rparam, kparam)
-  optimalR <- optimalParams$r
-  optimalK <- optimalParams$k
+  tmp2 <- optimizeRKParams(sscDf, optimalS, rparam, kparam)
+  optimalR <- tmp2$optimalParams$r
+  optimalK <- tmp2$optimalParams$k
   
   #plot of s parameter optimization
   if (plotLines) {
@@ -261,5 +260,11 @@ optimizeSSCParams <- function(x, sparam, rparam, kparam, plotLines=TRUE, plotS=T
     sscLinesPlot <- NULL
   }
   
-  return(list('params'=list('r'=optimalR, 'k'=optimalK, 's'=optimalS), 'sparsityPlot'=sparsityPlot, 'sscLinesPlot'=sscLinesPlot))
+  if (showRKScores) {
+    rkScoresDf <- tmp2$rkScores
+  } else {
+    rkScoresDf <- NULL
+  }
+  
+  return(list('params'=list('r'=optimalR, 'k'=optimalK, 's'=optimalS), 'sparsityPlot'=sparsityPlot, 'sscLinesPlot'=sscLinesPlot, 'rkScoresDf'=rkScoresDf))
 }
