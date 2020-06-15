@@ -16,6 +16,16 @@ getSSCDf <- function(sscList) {
   return(sscDf)
 }
 
+#'Makes a Sparsity plot
+#'
+#'a plot showing weighted cardinality score vs shrinkage parameter (s)
+#'
+#'@param sparam \code{vector} of values used for sparsity parameter in \code{spatialShrunkenCentroids}
+#'@param uniqueClasses \code{dataframe} with plateaus removed resulting from k == classes obtained from \code{optimizeSParam}
+#'@param optimalS value of optimized s
+#'@return plot showing weighted cardinality score vs shrinkage parameter (s)
+#'
+#'@export
 plotSparsity <- function(sparam, uniqueClasses, optimalS){
     figure <- ggplot() +
       xlab('sparsity (s)') +
@@ -32,6 +42,7 @@ plotSparsity <- function(sparam, uniqueClasses, optimalS){
 #' 
 #' @param ssc \code{dataframe} with \code{summary()} information from \code{SpatialShrunkenCentroids2} objects
 #' @param sparam \code{vector} of values used for sparsity parameter in \code{spatialShrunkenCentroids}
+#' @param plot can be TREUE or FALSE to define if the plot showing weighted cardinality score vs s parameter is required or not
 #' @return \code{integer} optimal value of s
 #' 
 #' @export
@@ -177,9 +188,10 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
 
 #'Plot of sparsity (s) parameter optimization
 #'
-#'Plot that shows predicted # of segments for different s values
+#'Plot that shows predicted # of segments vs. shrinkage parameter s
 #'
-#'@param sscObject \code{SpatialShrunkenCentroids2} object output from \code{spatialShrunkenCentroids()}
+#'@param sscDf object output from \code{spatialShrunkenCentroids()} as a \code{dataframe}
+#'@param plot is user defined either TRUE or FALSE
 #'@return figure with plot of predicted # of segments for different s values
 #'
 #'@examples
@@ -189,7 +201,8 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
 #'sparam <- c(0,3,6,9,12)
 #'
 #'ssc <- spatialShrunkenCentroids(data, r=rparam, k=kparam, s=sparam)
-#'SFig <- plotSSCLines(ssc)
+#'sscDf <- as.data.frame(Cardinal::summary(ssc))
+#'SFig <- plotSSCLines(sscDf, plot=TRUE)
 #'
 #'@export
 plotSSCLines <- function(sscDf, plot=TRUE){
@@ -222,7 +235,11 @@ plotSSCLines <- function(sscDf, plot=TRUE){
 #' @param sparam \code{vector} of values used for sparsity parameter in \code{spatialShrunkenCentroids}
 #' @param rparam \code{vector} of values used for radius parameter in \code{spatialShrunkenCentroids}
 #' @param kparam \code{vector} of values used for k parameter in \code{spatialShrunkenCentroids}
-#' @return \code{list} with optimal \code{spatialShrunkenCentroids} parameters for r, k, and s and figure from \code{sscLinesPlot}
+#' @param plotLines can be TREUE or FALSE to define if the plot of s parameter optimization is required or not
+#' @param plotS can be TREUE or FALSE to define if the plot showing weighted cardinality score vs s parameter is required or not
+#' @param showRKScorescan be TREUE or FALSE to define if RK scores are required
+#' @return \code{list} with optimal \code{spatialShrunkenCentroids} parameters for r, k, and s and figures from \code{sscLinesPlot} and
+#' \code{plotSparcity} and rkScores
 #' @examples
 #' 
 #' rparam <- c(1,2,3)
