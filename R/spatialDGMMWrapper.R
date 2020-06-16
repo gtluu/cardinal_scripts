@@ -9,7 +9,7 @@
 #' @param k The maximum number of segments (clusters). This can be a vector to try initializing
 #' the clustering wiht different numbers of maximum segments. The final number of segmenets may
 #' differ.
-#' @param ... Parameters to be passed to \code{spatialDGMM}.
+#' @param ... Parameters to be passed to \code{spatialDGMM()}.
 #' @return \code{list} of \code{SpatialDGMM} objects.
 #' @examples
 #' 
