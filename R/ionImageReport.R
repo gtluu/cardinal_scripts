@@ -16,7 +16,6 @@
 #'                normalize.image='linear', contrast.enhance='histogram')
 #'
 #' @export
-
 ionImageReport <- function(dataset, mz, filedir=getwd(), filename, ...) {
   pdf(paste0(filename, '.pdf'))
   for (i in mz) {
