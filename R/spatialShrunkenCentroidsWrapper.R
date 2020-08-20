@@ -11,16 +11,7 @@
 #' the clustering wiht different numbers of maximum segments. The final number of segmenets may
 #' differ.
 #' @param s The sparsity thresholding parameter by which to shrink the t-statistics.
-#' @param method The method to use to calculate the spatial smoothing weights. The 'gaussian'
-#' method refers to spatially-aware (SA) weights, and 'adaptive' refers to spatially-aware
-#' structurally-adaptive (SASA) weights.
-#' @param dist The type of distance metric to use when calculating neighboring pixels based on r.
-#' The options are 'radial', 'manhattan', 'minkowski', and 'chebyshev' (the default).
-#' @param init Initial cluster configuration. This may either be the result of a call to
-#' \code {spatialKMeans}, or a list of factors giving the initial cluster configuration.
-#' @param iter.max The maximum number of clustering iterations.
-#' @param BPPARAM An optional instance of \code{BiocParallelParam}. See documentation for
-#' \code{bpapply}.
+#' @param ... Parameters to be passed to \code{spatialShrunkenCentroids()}
 #' @return \code{list} of \code{spatialShrunkenCentroids2} objects
 #' @examples
 #' 
@@ -31,17 +22,13 @@
 #' ssc <- spatialShrunkenCentroidsWrapper(data, r=rparam, k=kparam, s=sparam)
 #' 
 #' @export
-spatialShrunkenCentroidsWrapper <- function(dataset, r=1, k=3, s=0, method='gaussian',
-                                            distance='chebyshev', init=NULL, iter.max=10,
-                                            BPPARAM=bpparam()) {
+spatialShrunkenCentroidsWrapper <- function(dataset, r=1, k=3, s=0, ...) {
   sscList <- list()
   inc <- 1
   for (r in rparam) {
     for (k in kparam) {
       for (s in sparam) {
-        ssc <- try(spatialShrunkenCentroids(dataset, r=r, k=k, s=s, method=method,
-                                            distance=distance, init=init, iter.max=iter.max,
-                                            BPPARAM=BPPARAM))
+        ssc <- try(spatialShrunkenCentroids(dataset, r=r, k=k, s=s, ...))
         if (class(ssc) != 'try-error') {
           sscList[[inc]] <- ssc
           inc <- inc + 1
