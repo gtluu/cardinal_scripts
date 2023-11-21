@@ -65,25 +65,15 @@ optimizeSParam <- function(ssc, sparam, plot=TRUE) {
     }
   }
   # Find the knee of the curve of uniqueClasses vs sparam.
-  kneeParam <- 5
-  while(TRUE) {
-    knee <- kneed$KneeLocator(x=sparam, y=uniqueClasses, S=kneeParam, curve='convex', direction='decreasing')$knee
-    if (!is.null(knee)) {
-      optimalS <- knee
-      break
+  optimalS <- try(kneedle(x=sparam, y=uniqueClasses)[1], silent=TRUE)
+  if (class(optimalS) != 'try-error') {
+    if(plot) {
+      sparsityPlot <- plotSparsity(sparam, uniqueClasses, optimalS)
+    } else {
+      sparsityPlot <- NULL
     }
-    kneeParam <- kneeParam - 0.1
-    if (kneeParam <= 0) {
-      # Error if no optimal s parameter is found.
-      stop('No s parameter identified.')
-    }
+    return(list('optimalS'=optimalS, 'sparsityPlot'=sparsityPlot))
   }
-  if(plot) {
-    sparsityPlot <- plotSparsity(sparam, uniqueClasses, optimalS)
-  } else {
-    sparsityPlot <- NULL
-  }
-  return(list('optimalS'=optimalS, 'sparsityPlot'=sparsityPlot))
 }
 
 #' Optimize Sparsity (s) Parameter
@@ -103,7 +93,6 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
   for (r in rparam) {
     for (k in kparam) {
       # Find the knee for each combination of r and k.
-      kneeParam <- 5
       kneeDf <- ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]
       kneeDfS <- kneeDf$s
       kneeDfClasses <- kneeDf$classes
@@ -119,24 +108,14 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
       # Only find knee if line is not horizontal.
       if (length(kneeDfS) > 1 & length(kneeDfClasses) > 1) {
         if (nrow(kneeDf) > 0) {
-          while(TRUE) {
-            knee <- kneed$KneeLocator(x=kneeDfS, y=kneeDfClasses, S=kneeParam, curve='convex', direction='decreasing')$knee
-            if (!is.null(knee)) {
-              break
+          knee <- try(kneedle(x=kneeDfS, y=kneeDfClasses)[1], silent=TRUE)
+          if (class(knee) != 'try-error') {
+            # Find slope * 100 of exponential curve for each combination of r and k.
+            slope <- (lm(log(ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]$classes) ~
+                           ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]$s)$coefficients[[2]]) * 100
+            if (!is.na(slope) & !is.na(knee)) {
+              rk <- rbind(rk, c(r, k, slope, knee))
             }
-            kneeParam <- kneeParam - 0.1
-            if (kneeParam <= 0) {
-              break
-            }
-          }
-          if (is.null(knee)) {
-            knee <- NA
-          }
-          # Find slope * 100 of exponential curve for each combination of r and k.
-          slope <- (lm(log(ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]$classes) ~
-                         ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]$s)$coefficients[[2]]) * 100
-          if (!is.na(slope)) {
-            rk <- rbind(rk, c(r, k, slope, knee))
           }
         }
       }
@@ -167,11 +146,11 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
       sParamModel <- lm(log(classes) ~ ssc[,c('s', 'classes')][which(ssc$r==r & ssc$k==k),]$s)
       sParamSeq <- seq(min(sparam), max(sparam), 0.1)
       classesModel <- exp(predict(sParamModel, sparam=list(sParamSeq)))
-      dx <- numpy$gradient(sparam)
-      dy <- numpy$gradient(classes)
-      d2x <- numpy$gradient(dx)
-      d2y <- numpy$gradient(dy)
-      curvature <- (numpy$abs(d2y) / (1 + (dy**2))**1.5) * 100
+      dx <- pracma::gradient(sparam)
+      dy <- pracma::gradient(classes)
+      d2x <- pracma::gradient(dx)
+      d2y <- pracma::gradient(dy)
+      curvature <- (abs(d2y) / (1 + (dy**2))**1.5) * 100
       optimalParams <- rbind(optimalParams, c(r, k, srk[which(srk$r==r & srk$k==k),]$slope,
                                               curvature[match(kneeValue, sparam)]))
     }
@@ -181,7 +160,7 @@ optimizeRKParams <- function(ssc, optimalS, rparam, kparam) {
   # Remove combinations of r and k that have no slope or an increasing curve.
   optimalParams <- optimalParams[which(optimalParams$slope < 0),]
   # score = slope * curvature for each exponential curve.
-  optimalParams$score <- numpy$abs(optimalParams$slope * optimalParams$curvature)
+  optimalParams$score <- abs(optimalParams$slope * optimalParams$curvature)
   # Choose the line where the combination of r and k has the best score.
   return(list('optimalParams'=optimalParams[which(optimalParams$score==max(optimalParams$score)),], 'rkScores'=optimalParams))
 }
