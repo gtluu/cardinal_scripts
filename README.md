@@ -14,12 +14,12 @@ devtools::load_all("/path/to/cardinalscripts")
 ```
 
 ## Dependencies
-R (>= 4.3.1)
-Cardinal (>= 3.4.1)
-stringr(>= 1.5.0)
-fuzzyjoin (>= 0.1.6)
-dplyr (>= 1.1.3)
-ggplot2 (>= 3.4.4)
+- R (>= 4.3.1)
+- Cardinal (>= 3.4.1)
+- stringr(>= 1.5.0)
+- fuzzyjoin (>= 0.1.6)
+- dplyr (>= 1.1.3)
+- ggplot2 (>= 3.4.4)
 
 ## Usage
 
