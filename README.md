@@ -14,25 +14,50 @@ devtools::load_all("/path/to/cardinalscripts")
 ```
 
 ## Dependencies
-Cardinal 2.4.0 or higher installed from Bioconductor 3.10 or higher.
+R (>= 4.3.1)
+Cardinal (>= 3.4.1)
+stringr(>= 1.5.0)
+fuzzyjoin (>= 0.1.6)
+dplyr (>= 1.1.3)
+ggplot2 (>= 3.4.4)
 
 ## Usage
 
-### spatialShrunkenCentroidsWrapper
+### updateMetadata
 
-Given multiple r, k, and s parameter sets, use this function to output one SpatialShrunkenCentroids2 object per set of parameters instead of one single SpatialShrunkenCentroids2 object containing every model.
+Use this function to add region of interest (ROI) and/or condition/treatment information based on x-y coordinates. An example Spot List (exported from Bruker flexImaging) and ROI table can be found in the ```examples``` folder.
 
 ```
-ssc <- spatialShrunkenCentroids(data, r=c(1, 2), k=c(5, 10, 20), s=c(0, 3, 6, 9))
-
-> class(ssc)
-> SpatialShrunkenCentroids2
+data <- readMSIData('data.imzML')
+data <- updateMetadata(data, spotsFile="spots.txt", roiFile="rois.csv")
 ```
-```
-ssc <- spatialShrunkenCentroidsWrapper(data, r=c(1, 2), k=c(5, 10, 20), s=c(0, 3, 6, 9))
 
-> class(ssc)
-> List
+### subsetData
+
+Use this function to remove any unwanted ROIs from your dataset. This will remove any pixel from that ROI from the ```MSImagingExperiment``` object.
+
+```
+data <- readMSIData('data.imzML')  # dataset with 4 ROIs
+roi1 <- subset(data, c('roi2', 'roi3', 'roi4'))
+roi2 <- subset(data, c('roi1', 'roi3', 'roi4'))
+roi3 <- subset(data, c('roi1', 'roi2', 'roi4'))
+roi4 <- subset(data, c('roi1', 'roi2', 'roi3'))
+```
+
+### ionImageReport
+
+Use this function to generate a PDF containing ion images for each feature from a vector of features.
+
+```
+ionImageReport(data, mz=mz(data), filename='ion_images')
+```
+
+### sscImageReport
+
+Use this function to generate a PDF containing segmentation maps for each model that was used for multivariate segmentation via spatial shrunken centroids (i.e. each combination of r, k, and s parameters).
+
+```
+sscImageReport(ssc, filename='segmentation_maps')
 ```
 
 ### optimizeSSCParams
@@ -40,39 +65,14 @@ ssc <- spatialShrunkenCentroidsWrapper(data, r=c(1, 2), k=c(5, 10, 20), s=c(0, 3
 Use this function to assist in optimize the spatial neighborhood radius (r), initial number of segments (k), and sparsity (s) parameters used for running spatial shrunken centroids segmentation.
 
 ```
-ssc <- spatialShrunkenCentroids(data, r=c(1, 2), k=c(5, 10, 20), s=c(0, 3, 6, 9))
-optimizeSSCParams(ssc)
+ssc <- spatialShrunkenCentroids(preprocessed_data, r=c(1, 2), k=c(5, 10, 20), s=c(0, 3, 6, 9))
+ssc_params <- optimizeSSCParams(ssc)
 ```
 
-### updateMetadata
+### getStatisticTable
 
-Use this function to add region of interest (ROI) and/or condition/treatment information based on x-y coordinates. An example Spot List (exported from Bruker FlexImaging v4.1) and ROI table can be found in the ```examples``` folder.
-
-```
-data <- updateMetadata(data, spotsFile="spots.txt", roiFile="rois.csv")
-```
-
-### spatialDGMMWrapper
-
-Low quality features that can cause errors in spatialDGMM or cause the algorithm to get stuck when initializing Gaussian mixture models (GMMs). Use this function to apply spatial-DGMM segmentation on features one at a time and output a list of ```spatialDGMM``` objects. If a feature causes an error or is found to be unable to initalize GMMs, it will add a ```try-error``` object to the list at the index of said feature instead.
+Use this function to get a ```data.frame``` of values for a given set of r, k, and s parameters that can be used to tell which features contribute significantly to specific classes in a given spatial shrunken centroids segmentation model.
 
 ```
-sdgmm <- spatialDGMMWrapper(data, r=1, k=4)
-```
-
-### segmentationTestWrapper
-
-Use this function to following spatialDGMMWrapper to output a ```dataframe``` containing the results of ```segmentationTest()``` on each spatial-DGMM model. Only fixed conditions are currently supported. Since ```spatialDGMMWrapper()``` has each model contained in a separate ```spatialDGMM``` object, the AdjP values/FDR values in the resulting ```dataframe``` are unreliable and should be ignored.
-
-```
-sdgmm <- spatialDGMMWrapper(data, r=1, k=4)
-resultsDf <- segmentationTestWrapper(sdgmmList, r=1, k=4, fixedCondition='treated', classControl='Ymax')
-```
-
-### findDiscriminantFeatures
-
-Use this function to apply ```spatialDGMMWrapper()``` and ```segmentationTestWrapper()``` to an ```MSImagingExperiment``` object. Useful if only testing one fixed condition in the dataset.
-
-```
-resultsDf <- findDiscriminantFeatures(data, r=1, k=4, fixedCondition='treated', classControl='Ymax')
+stat_table <- getStatisticTable(ssc, ssc_params$params)
 ```
