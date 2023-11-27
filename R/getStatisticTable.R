@@ -16,7 +16,7 @@
 #' 
 #' sscParams <- optimizeSSCParams(ssc, r=rparam, k=kparam, s=sparam)
 #' 
-#' getStatisticTable(ssc, sscParams)
+#' getStatisticTable(ssc, sscParams$params)
 #' 
 #' @export
 getStatisticTable <- function(sscObject, sscParams) {

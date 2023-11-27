@@ -9,14 +9,18 @@
 #' @return \code{NULL}; a PDF file will be in the specified location.
 #' @example 
 #' 
-#' sscImageReport(processedData, filename='three_images')
+#' sscImageReport(ssc, filename='three_images')
 #' 
-#' sscImageReport(processedData, filename='three_images', layout=c(2, 2), xlim=c(0, 300), ylim=c(0, 150))
+#' sscImageReport(ssc, filename='three_images', layout=c(2, 2), xlim=c(0, 300), ylim=c(0, 150))
 #'
 #' @export
 sscImageReport <- function(ssc, filedir=getwd(), filename, ...) {
-  pdf(paste0(filename, '.pdf'))
-  for (i in nrow(modelData(ssc))) {
+  pdf(paste0(filedir, '/', filename, '.pdf'))
+  for (i in 1:nrow(modelData(ssc))) {
+    print(paste0('Saving SSC image for',
+                 ' r=', as.character(modelData(ssc)[i,]$r),
+                 ' k=', as.character(modelData(ssc)[i,]$k),
+                 ' s=', as.character(modelData(ssc)[i,]$s)))
     print(image(ssc, model=as.list(modelData(ssc)[i,]), ...))
   }
   dev.off()
